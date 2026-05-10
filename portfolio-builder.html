@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PortfolioAI — AI Portfolio Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #16161f;
+    --surface: #1c1c28;
+    --surface2: #22223a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f8;
+    --text2: #9898b8;
+    --text3: #5a5a7a;
+    --accent: #7c6ff7;
+    --accent2: #a78bfa;
+    --accent3: #c4b5fd;
+    --green: #4ade80;
+    --cyan: #22d3ee;
+    --pink: #f472b6;
+    --amber: #fbbf24;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --r: 12px;
+    --r2: 16px;
+    --r3: 20px;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  .topnav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 56px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.97);
+    backdrop-filter: blur(12px);
+    position: relative; z-index: 100;
+    flex-shrink: 0;
+  }
+  .logo { font-family: var(--font-head); font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 12px var(--accent); }
+  .nav-actions { display: flex; align-items: center; gap: 8px; }
+  .theme-btns { display: flex; gap: 4px; }
+  .theme-btn {
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border2);
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; background: var(--surface);
+  }
+  .theme-btn:hover, .theme-btn.active { border-color: var(--accent); background: rgba(124,111,247,0.15); }
+
+  .workspace {
+    display: grid; grid-template-columns: 260px 1fr 1fr;
+    flex: 1; overflow: hidden;
+  }
+
+  .sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .sidebar-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 8px 4px; }
+
+  .step-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    cursor: pointer; transition: all 0.15s;
+    border: none; background: transparent; color: var(--text2);
+    width: 100%; text-align: left; font-family: var(--font-body); font-size: 13px;
+  }
+  .step-btn:hover { background: var(--surface); color: var(--text); }
+  .step-btn.active { background: rgba(124,111,247,0.15); color: var(--accent3); }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 1px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0; opacity: 0.7;
+  }
+  .step-btn.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; opacity: 1; }
+  .step-btn.done .step-num { background: rgba(74,222,128,0.2); border-color: var(--green); color: var(--green); }
+
+  .progress-bar-wrap { padding: 12px 8px 4px; }
+  .progress-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .progress-track { height: 3px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; transition: width 0.4s ease; }
+
+  .form-panel {
+    overflow-y: auto; padding: 28px;
+    background: var(--bg2); border-right: 1px solid var(--border);
+  }
+  .form-panel::-webkit-scrollbar { width: 4px; }
+  .form-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .form-header { margin-bottom: 24px; }
+  .form-header h2 { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .form-header p { color: var(--text2); font-size: 13px; }
+
+  .field-group { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  label { font-size: 12px; font-weight: 500; color: var(--text2); letter-spacing: 0.02em; }
+
+  input, textarea, select {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; color: var(--text); font-family: var(--font-body);
+    font-size: 13px; padding: 10px 14px; outline: none;
+    transition: border-color 0.15s; width: 100%;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,111,247,0.15); }
+  textarea { resize: vertical; min-height: 80px; }
+  ::placeholder { color: var(--text3); }
+
+  .ai-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px;
+    background: rgba(124,111,247,0.12); border: 1px solid rgba(124,111,247,0.3);
+    color: var(--accent3); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; font-family: var(--font-body);
+  }
+  .ai-btn:hover { background: rgba(124,111,247,0.22); border-color: var(--accent); }
+  .ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ai-btn .spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .skill-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    font-size: 12px; color: var(--text2);
+  }
+  .skill-tag button { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
+  .skill-tag button:hover { color: #ef4444; }
+
+  .skill-input-row { display: flex; gap: 8px; }
+  .skill-input-row input { flex: 1; }
+
+  .add-btn {
+    padding: 8px 16px; background: var(--accent); border: none;
+    border-radius: 10px; color: #fff; font-family: var(--font-body);
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
+  }
+  .add-btn:hover { opacity: 0.85; }
+
+  .project-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .project-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .project-card-header h4 { font-weight: 600; font-size: 14px; }
+  .del-btn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; padding: 0; }
+  .del-btn:hover { color: #ef4444; }
+
+  .form-nav { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .btn-prev {
+    padding: 10px 20px; background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; color: var(--text2); font-family: var(--font-body);
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-prev:hover { color: var(--text); }
+  .btn-next {
+    padding: 10px 24px; background: var(--accent); border: none;
+    border-radius: 10px; color: #fff; font-family: var(--font-body);
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; margin-left: auto;
+  }
+  .btn-next:hover { opacity: 0.85; }
+
+  .preview-panel { overflow-y: auto; background: var(--bg3); }
+  .preview-panel::-webkit-scrollbar { width: 4px; }
+  .preview-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .preview-header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(22,22,31,0.9); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .preview-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+  .live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  .portfolio-preview { padding: 0; min-height: 100%; }
+
+  /* THEME: DARK */
+  .theme-dark .pf-hero {
+    background: linear-gradient(135deg, #0d0d18 0%, #0f0a1e 50%, #0a0f18 100%);
+    padding: 60px 36px 48px; text-align: center; position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .theme-dark .pf-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 100%, rgba(124,111,247,0.15), transparent);
+  }
+  .pf-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-size: 26px; font-weight: 800;
+    margin: 0 auto 16px; position: relative; z-index: 1;
+  }
+  .theme-dark .pf-avatar { background: linear-gradient(135deg, var(--accent), #5b21b6); color: #fff; }
+  .pf-name { font-family: var(--font-head); font-weight: 800; position: relative; z-index: 1; margin-bottom: 6px; }
+  .pf-title { position: relative; z-index: 1; margin-bottom: 16px; }
+  .pf-social { display: flex; justify-content: center; gap: 12px; position: relative; z-index: 1; flex-wrap: wrap; }
+  .pf-social a {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    text-decoration: none; transition: all 0.2s;
+  }
+  .theme-dark .pf-name { font-size: 32px; color: #fff; }
+  .theme-dark .pf-title { color: var(--accent3); font-size: 15px; }
+  .theme-dark .pf-social a { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #ccc; }
+  .theme-dark .pf-social a:hover { background: rgba(124,111,247,0.2); border-color: var(--accent); color: #fff; }
+
+  .pf-section { padding: 32px 36px; border-bottom: 1px solid var(--border); }
+  .pf-section-title {
+    font-family: var(--font-head); font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 16px;
+  }
+  .theme-dark .pf-section-title { color: var(--accent2); }
+  .pf-about { font-size: 14px; line-height: 1.8; }
+  .theme-dark .pf-about { color: #b8b8d8; }
+
+  .skills-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .skill-pill { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .theme-dark .skill-pill { background: rgba(124,111,247,0.15); border: 1px solid rgba(124,111,247,0.3); color: var(--accent3); }
+
+  .projects-grid { display: flex; flex-direction: column; gap: 12px; }
+  .pf-project { border-radius: 12px; padding: 16px; transition: transform 0.2s; }
+  .pf-project:hover { transform: translateY(-2px); }
+  .theme-dark .pf-project { background: var(--surface); border: 1px solid var(--border2); }
+  .pf-project h4 { font-family: var(--font-head); font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .theme-dark .pf-project h4 { color: #fff; }
+  .pf-project p { font-size: 13px; line-height: 1.6; }
+  .theme-dark .pf-project p { color: var(--text2); }
+  .pf-tech-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .pf-tech { font-size: 11px; padding: 3px 10px; border-radius: 12px; }
+  .theme-dark .pf-tech { background: rgba(34,34,58,0.8); color: var(--text3); border: 1px solid var(--border); }
+
+  .pf-contact { display: flex; flex-direction: column; gap: 10px; }
+  .pf-contact-item { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .pf-contact-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+  }
+  .theme-dark .pf-contact-icon { background: var(--surface2); color: var(--accent2); }
+  .theme-dark .pf-contact-item { color: var(--text2); }
+
+  /* THEME: LIGHT */
+  .theme-light { background: #f8f8fc; }
+  .theme-light .pf-hero { background: #fff; padding: 60px 36px 48px; text-align: center; border-bottom: 1px solid #e8e8f0; }
+  .theme-light .pf-avatar { background: #1a1a2e; color: #fff; }
+  .theme-light .pf-name { font-size: 32px; color: #0f0f1a; }
+  .theme-light .pf-title { color: #6f6f9f; font-size: 15px; }
+  .theme-light .pf-social a { background: #f0f0fa; border: 1px solid #e0e0ef; color: #4a4a7a; }
+  .theme-light .pf-section { border-bottom: 1px solid #e8e8f0; }
+  .theme-light .pf-section-title { color: #2a2a4a; }
+  .theme-light .pf-about { color: #4a4a6a; }
+  .theme-light .skill-pill { background: #ededfa; border: 1px solid #d8d8f4; color: #5a5a9f; }
+  .theme-light .pf-project { background: #fff; border: 1px solid #e8e8f0; }
+  .theme-light .pf-project h4 { color: #0f0f1a; }
+  .theme-light .pf-project p { color: #5a5a7a; }
+  .theme-light .pf-tech { background: #f0f0fa; color: #7070a0; border: 1px solid #e0e0f0; }
+  .theme-light .pf-contact-icon { background: #ededfa; color: #5a5a9f; }
+  .theme-light .pf-contact-item { color: #5a5a7a; }
+
+  /* THEME: GRADIENT */
+  .theme-gradient { background: #080514; }
+  .theme-gradient .pf-hero {
+    background: linear-gradient(135deg, #0c0521 0%, #130b2e 40%, #0a1628 100%);
+    padding: 60px 36px 48px; text-align: center; position: relative; overflow: hidden;
+    border-bottom: 1px solid rgba(148,100,255,0.2);
+  }
+  .theme-gradient .pf-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: conic-gradient(from 180deg at 50% 50%, rgba(148,100,255,0.15) 0deg, rgba(34,211,238,0.08) 120deg, rgba(244,114,182,0.1) 240deg, rgba(148,100,255,0.15) 360deg);
+  }
+  .theme-gradient .pf-avatar { background: linear-gradient(135deg, #9464ff, #22d3ee); color: #fff; box-shadow: 0 0 32px rgba(148,100,255,0.4); }
+  .theme-gradient .pf-name { font-size: 32px; background: linear-gradient(135deg, #ffffff, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .theme-gradient .pf-title { color: #22d3ee; font-size: 15px; }
+  .theme-gradient .pf-social a { background: rgba(148,100,255,0.12); border: 1px solid rgba(148,100,255,0.25); color: #c4b5fd; }
+  .theme-gradient .pf-section { border-bottom: 1px solid rgba(148,100,255,0.1); }
+  .theme-gradient .pf-section-title { background: linear-gradient(90deg, #9464ff, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .theme-gradient .pf-about { color: #a8a8c8; }
+  .theme-gradient .skill-pill { background: linear-gradient(135deg, rgba(148,100,255,0.15), rgba(34,211,238,0.1)); border: 1px solid rgba(148,100,255,0.3); color: #c4b5fd; }
+  .theme-gradient .pf-project { background: rgba(148,100,255,0.06); border: 1px solid rgba(148,100,255,0.15); }
+  .theme-gradient .pf-project h4 { color: #f0eeff; }
+  .theme-gradient .pf-project p { color: #9898b8; }
+  .theme-gradient .pf-tech { background: rgba(34,211,238,0.08); color: #22d3ee; border: 1px solid rgba(34,211,238,0.2); }
+  .theme-gradient .pf-contact-icon { background: rgba(148,100,255,0.15); color: #9464ff; }
+  .theme-gradient .pf-contact-item { color: #9898b8; }
+
+  /* Experience */
+  .exp-card { border-left: 2px solid var(--border2); padding-left: 16px; margin-bottom: 16px; }
+  .theme-dark .exp-card { border-left-color: rgba(124,111,247,0.3); }
+  .theme-gradient .exp-card { border-left-color: rgba(148,100,255,0.3); }
+  .theme-light .exp-card { border-left-color: #d0d0e8; }
+  .exp-role { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .exp-company { font-size: 13px; margin-bottom: 4px; }
+  .exp-period { font-size: 12px; margin-bottom: 6px; }
+  .exp-desc { font-size: 13px; line-height: 1.6; }
+  .theme-dark .exp-company { color: var(--accent3); }
+  .theme-dark .exp-period { color: var(--text3); }
+  .theme-dark .exp-desc { color: var(--text2); }
+  .theme-gradient .exp-company { color: #22d3ee; }
+  .theme-gradient .exp-period { color: #5a5a7a; }
+  .theme-gradient .exp-desc { color: #9898b8; }
+  .theme-light .exp-company { color: #5a5a9f; }
+  .theme-light .exp-period { color: #8888a8; }
+  .theme-light .exp-desc { color: #5a5a7a; }
+
+  /* Toast */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast {
+    padding: 12px 16px; border-radius: 10px; font-size: 13px; max-width: 300px;
+    animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px;
+    backdrop-filter: blur(12px); pointer-events: auto;
+  }
+  .toast.success { background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
+  .toast.info { background: rgba(124,111,247,0.15); border: 1px solid rgba(124,111,247,0.3); color: var(--accent3); }
+  .toast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+  @keyframes toastIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
+
+  .empty-state { text-align: center; padding: 24px 20px; color: var(--text3); font-size: 13px; }
+  .empty-state .big { font-size: 28px; margin-bottom: 8px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .form-tip { font-size: 11px; color: var(--text3); margin-top: 4px; font-style: italic; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* API Key Banner */
+  .api-banner {
+    background: rgba(124,111,247,0.08); border: 1px solid rgba(124,111,247,0.2);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+    font-size: 12px; color: var(--text2); line-height: 1.6;
+  }
+  .api-banner strong { color: var(--accent3); }
+  .api-key-row { display: flex; gap: 8px; margin-top: 8px; }
+  .api-key-row input { flex: 1; font-size: 12px; padding: 7px 12px; }
+  .api-save-btn {
+    padding: 7px 14px; background: var(--accent); border: none; border-radius: 8px;
+    color: #fff; font-family: var(--font-body); font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+
+  @media (max-width: 1000px) {
+    .workspace { grid-template-columns: 220px 1fr; }
+    .preview-panel { display: none; }
+  }
+  @media (max-width: 640px) {
+    .workspace { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <nav class="topnav">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      PortfolioAI
+    </div>
+    <div class="nav-actions">
+      <div class="theme-btns">
+        <div class="theme-btn active" onclick="setTheme('dark')" title="Dark Developer">🌑</div>
+        <div class="theme-btn" onclick="setTheme('light')" title="Minimal Light">☀️</div>
+        <div class="theme-btn" onclick="setTheme('gradient')" title="Gradient Modern">✨</div>
+      </div>
+    </div>
+  </nav>
+  <div class="workspace">
+    <aside class="sidebar">
+      <div class="progress-bar-wrap">
+        <div class="progress-label">
+          <span>Progress</span>
+          <span id="prog-pct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="sidebar-title">Sections</div>
+      <button class="step-btn active" onclick="goStep(0)" id="s0"><span class="step-num">1</span>Personal Info</button>
+      <button class="step-btn" onclick="goStep(1)" id="s1"><span class="step-num">2</span>About Me</button>
+      <button class="step-btn" onclick="goStep(2)" id="s2"><span class="step-num">3</span>Skills</button>
+      <button class="step-btn" onclick="goStep(3)" id="s3"><span class="step-num">4</span>Projects</button>
+      <button class="step-btn" onclick="goStep(4)" id="s4"><span class="step-num">5</span>Experience</button>
+      <button class="step-btn" onclick="goStep(5)" id="s5"><span class="step-num">6</span>Social Links</button>
+    </aside>
+
+    <section class="form-panel" id="form-panel"></section>
+
+    <section class="preview-panel">
+      <div class="preview-header">
+        <div class="preview-label"><div class="live-dot"></div>Live Preview</div>
+        <div style="font-size:11px;color:var(--text3);">Updates as you type</div>
+      </div>
+      <div class="portfolio-preview theme-dark" id="portfolio-preview"></div>
+    </section>
+  </div>
+</div>
+<div class="toast-container" id="toasts"></div>
+
+<script>
+let currentStep = 0;
+let currentTheme = 'dark';
+let isGenerating = false;
+let apiKey = localStorage.getItem('portfolioai_apikey') || '';
+
+const data = {
+  name:'', title:'', email:'', phone:'', location:'',
+  about:'',
+  skills:[],
+  projects:[{id:1,name:'',desc:'',tech:'',url:''}],
+  experience:[{id:1,role:'',company:'',period:'',desc:''}],
+  github:'',linkedin:'',twitter:'',website:''
+};
+
+try {
+  const saved = localStorage.getItem('portfolioai_data');
+  if(saved) Object.assign(data, JSON.parse(saved));
+} catch(e){}
+
+let projId = Math.max(...data.projects.map(p=>p.id), 1) + 1;
+let expId  = Math.max(...data.experience.map(e=>e.id), 1) + 1;
+
+function save() {
+  try { localStorage.setItem('portfolioai_data', JSON.stringify(data)); } catch(e){}
+}
+
+function toast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = (type==='success'?'✓ ':type==='error'?'✗ ':'✦ ') + msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+function setTheme(theme) {
+  currentTheme = theme;
+  document.querySelectorAll('.theme-btn').forEach((b,i)=>{
+    b.classList.toggle('active', ['dark','light','gradient'][i]===theme);
+  });
+  document.getElementById('portfolio-preview').className = `portfolio-preview theme-${theme}`;
+}
+
+function calcProgress() {
+  let score=0, max=7;
+  if(data.name) score++;
+  if(data.title) score++;
+  if(data.about) score++;
+  if(data.skills.length>0) score++;
+  if(data.projects.some(p=>p.name)) score++;
+  if(data.experience.some(e=>e.role)) score++;
+  if(data.email) score++;
+  const pct = Math.round(score/max*100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-pct').textContent = pct+'%';
+  [0,1,2,3,4,5].forEach(i=>{
+    const btn=document.getElementById('s'+i);
+    const done=stepDone(i);
+    btn.classList.toggle('done', done && i!==currentStep);
+    const numEl=btn.querySelector('.step-num');
+    numEl.textContent = (done && i!==currentStep) ? '✓' : i+1;
+  });
+}
+
+function stepDone(i) {
+  if(i===0) return !!(data.name && data.email);
+  if(i===1) return !!data.about;
+  if(i===2) return data.skills.length>0;
+  if(i===3) return data.projects.some(p=>p.name);
+  if(i===4) return data.experience.some(e=>e.role);
+  if(i===5) return !!(data.github||data.linkedin||data.website);
+  return false;
+}
+
+function goStep(n) {
+  currentStep=n;
+  document.querySelectorAll('.step-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
+  renderForm();
+  calcProgress();
+}
+
+function nav(back) {
+  const n = back ? currentStep-1 : currentStep+1;
+  if(n>=0 && n<6) goStep(n);
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderNav(showBack=true) {
+  return `<div class="form-nav">
+    ${showBack ? `<button class="btn-prev" onclick="nav(true)">← Back</button>` : ''}
+    ${currentStep<5 ? `<button class="btn-next" onclick="nav(false)">Next →</button>` : `<button class="btn-next" onclick="toast('Portfolio complete! 🎉','success')">🎉 Done</button>`}
+  </div>`;
+}
+
+function apiKeyBanner() {
+  return `<div class="api-banner">
+    <strong>✦ AI Features</strong> — Enter your Anthropic API key to enable AI content generation.
+    <div class="api-key-row">
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." value="${esc(apiKey)}">
+      <button class="api-save-btn" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>`;
+}
+
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  apiKey = val;
+  localStorage.setItem('portfolioai_apikey', val);
+  toast('API key saved!', 'success');
+}
+
+function renderForm() {
+  const el = document.getElementById('form-panel');
+  if(currentStep===0) el.innerHTML = renderStep0();
+  if(currentStep===1) el.innerHTML = renderStep1();
+  if(currentStep===2) el.innerHTML = renderStep2();
+  if(currentStep===3) el.innerHTML = renderStep3();
+  if(currentStep===4) el.innerHTML = renderStep4();
+  if(currentStep===5) el.innerHTML = renderStep5();
+}
+
+function renderStep0() {
+  return `<div class="form-header"><h2>Personal Info</h2><p>Your basic information shown at the top of your portfolio.</p></div>
+  <div class="field-group">
+    <div class="field-row">
+      <div class="field"><label>Full Name *</label><input type="text" value="${esc(data.name)}" placeholder="Alex Johnson" oninput="upd('name',this.value)"></div>
+      <div class="field"><label>Job Title *</label><input type="text" value="${esc(data.title)}" placeholder="Frontend Developer" oninput="upd('title',this.value)"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Email *</label><input type="email" value="${esc(data.email)}" placeholder="alex@example.com" oninput="upd('email',this.value)"></div>
+      <div class="field"><label>Phone</label><input type="text" value="${esc(data.phone)}" placeholder="+1 (555) 000-0000" oninput="upd('phone',this.value)"></div>
+    </div>
+    <div class="field"><label>Location</label><input type="text" value="${esc(data.location)}" placeholder="San Francisco, CA" oninput="upd('location',this.value)"></div>
+  </div>
+  ${renderNav(false)}`;
+}
+
+function renderStep1() {
+  return `<div class="form-header"><h2>About Me</h2><p>Write a compelling bio, or let AI generate one for you.</p></div>
+  ${apiKeyBanner()}
+  <div class="field-group">
+    <div class="field">
+      <label>Bio / Summary</label>
+      <textarea id="f-about" rows="6" placeholder="Tell visitors who you are, what you do, and what drives you..." oninput="upd('about',this.value)">${esc(data.about)}</textarea>
+      <p class="form-tip">Aim for 2-4 sentences. Be authentic.</p>
+    </div>
+    <button class="ai-btn" onclick="genAbout()" id="gen-about-btn">
+      <span id="gen-about-icon">✦</span> Generate with AI
+    </button>
+  </div>
+  ${renderNav()}`;
+}
+
+function renderStep2() {
+  const tags = data.skills.map(s=>`<span class="skill-tag">${esc(s)}<button onclick="removeSkill('${esc(s).replace(/'/g,"\\'")}')">×</button></span>`).join('');
+  return `<div class="form-header"><h2>Skills</h2><p>Add your technical skills and tools.</p></div>
+  ${apiKeyBanner()}
+  <div class="field-group">
+    <div class="field">
+      <label>Add a Skill</label>
+      <div class="skill-input-row">
+        <input type="text" id="skill-input" placeholder="e.g. React, TypeScript, Node.js" onkeydown="if(event.key==='Enter')addSkill()">
+        <button class="add-btn" onclick="addSkill()">Add</button>
+      </div>
+    </div>
+    <div class="skill-tags">${tags||'<span style="color:var(--text3);font-size:12px;">No skills yet</span>'}</div>
+    <button class="ai-btn" onclick="suggestSkills()" id="gen-skills-btn">
+      <span id="gen-skills-icon">✦</span> Suggest Skills for ${esc(data.title)||'my role'}
+    </button>
+  </div>
+  ${renderNav()}`;
+}
+
+function renderStep3() {
+  const cards = data.projects.map((p,i)=>`
+    <div class="project-card">
+      <div class="project-card-header"><h4>Project ${i+1}</h4><button class="del-btn" onclick="delProject(${p.id})">×</button></div>
+      <div class="field-group" style="gap:12px;">
+        <div class="field-row">
+          <div class="field"><label>Project Name</label><input type="text" value="${esc(p.name)}" placeholder="My Awesome App" oninput="updProject(${p.id},'name',this.value)"></div>
+          <div class="field"><label>Live URL</label><input type="text" value="${esc(p.url)}" placeholder="https://..." oninput="updProject(${p.id},'url',this.value)"></div>
+        </div>
+        <div class="field"><label>Description</label><textarea rows="3" placeholder="What does it do?" oninput="updProject(${p.id},'desc',this.value)">${esc(p.desc)}</textarea></div>
+        <div class="field"><label>Tech Stack</label><input type="text" value="${esc(p.tech)}" placeholder="React, Node.js, PostgreSQL" oninput="updProject(${p.id},'tech',this.value)"></div>
+        <button class="ai-btn" onclick="improveDesc(${p.id})">✦ Improve Description</button>
+      </div>
+    </div>`).join('');
+  return `<div class="form-header"><h2>Projects</h2><p>Showcase your best work.</p></div>
+  ${apiKeyBanner()}
+  ${cards}
+  <button class="add-btn" onclick="addProject()" style="width:100%;margin-top:4px;">+ Add Project</button>
+  ${renderNav()}`;
+}
+
+function renderStep4() {
+  const cards = data.experience.map((e,i)=>`
+    <div class="project-card">
+      <div class="project-card-header"><h4>Position ${i+1}</h4><button class="del-btn" onclick="delExp(${e.id})">×</button></div>
+      <div class="field-group" style="gap:12px;">
+        <div class="field-row">
+          <div class="field"><label>Job Title</label><input type="text" value="${esc(e.role)}" placeholder="Senior Developer" oninput="updExp(${e.id},'role',this.value)"></div>
+          <div class="field"><label>Company</label><input type="text" value="${esc(e.company)}" placeholder="Acme Corp" oninput="updExp(${e.id},'company',this.value)"></div>
+        </div>
+        <div class="field"><label>Period</label><input type="text" value="${esc(e.period)}" placeholder="Jan 2022 – Present" oninput="updExp(${e.id},'period',this.value)"></div>
+        <div class="field"><label>Description</label><textarea rows="3" placeholder="Key responsibilities..." oninput="updExp(${e.id},'desc',this.value)">${esc(e.desc)}</textarea></div>
+      </div>
+    </div>`).join('');
+  return `<div class="form-header"><h2>Experience</h2><p>List your work history.</p></div>
+  ${cards}
+  <button class="add-btn" onclick="addExp()" style="width:100%;margin-top:4px;">+ Add Position</button>
+  ${renderNav()}`;
+}
+
+function renderStep5() {
+  return `<div class="form-header"><h2>Social Links</h2><p>Connect your professional profiles.</p></div>
+  <div class="field-group">
+    <div class="field"><label>GitHub</label><input type="text" value="${esc(data.github)}" placeholder="https://github.com/username" oninput="upd('github',this.value)"></div>
+    <div class="field"><label>LinkedIn</label><input type="text" value="${esc(data.linkedin)}" placeholder="https://linkedin.com/in/username" oninput="upd('linkedin',this.value)"></div>
+    <div class="field"><label>Twitter / X</label><input type="text" value="${esc(data.twitter)}" placeholder="https://x.com/username" oninput="upd('twitter',this.value)"></div>
+    <div class="field"><label>Personal Website</label><input type="text" value="${esc(data.website)}" placeholder="https://mysite.dev" oninput="upd('website',this.value)"></div>
+  </div>
+  ${renderNav()}`;
+}
+
+function upd(key, val) { data[key]=val; save(); renderPreview(); calcProgress(); }
+function updProject(id,key,val) { const p=data.projects.find(p=>p.id===id); if(p) p[key]=val; save(); renderPreview(); }
+function updExp(id,key,val) { const e=data.experience.find(e=>e.id===id); if(e) e[key]=val; save(); renderPreview(); }
+
+function addSkill() {
+  const inp=document.getElementById('skill-input');
+  const val=inp.value.trim();
+  if(!val) return;
+  if(!data.skills.includes(val)) { data.skills.push(val); save(); renderForm(); renderPreview(); calcProgress(); }
+  inp.value='';
+}
+
+function removeSkill(s) { data.skills=data.skills.filter(x=>x!==s); save(); renderForm(); renderPreview(); calcProgress(); }
+
+function addProject() { data.projects.push({id:projId++,name:'',desc:'',tech:'',url:''}); save(); renderForm(); }
+function delProject(id) { if(data.projects.length>1){data.projects=data.projects.filter(p=>p.id!==id);save();renderForm();renderPreview();} }
+function addExp() { data.experience.push({id:expId++,role:'',company:'',period:'',desc:''}); save(); renderForm(); }
+function delExp(id) { if(data.experience.length>1){data.experience=data.experience.filter(e=>e.id!==id);save();renderForm();renderPreview();} }
+
+// ===== AI Generation =====
+async function callAI(prompt) {
+  if(!apiKey) { toast('Please add your Anthropic API key first.','error'); throw new Error('No API key'); }
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:800,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  if(!resp.ok) { const e=await resp.json(); throw new Error(e.error?.message||'API error'); }
+  const d=await resp.json();
+  if(d.content && d.content[0]) return d.content[0].text.trim();
+  throw new Error('No response');
+}
+
+async function genAbout() {
+  if(isGenerating) return;
+  isGenerating=true;
+  const btn=document.getElementById('gen-about-btn');
+  const icon=document.getElementById('gen-about-icon');
+  if(btn) btn.disabled=true;
+  if(icon){icon.textContent='⟳';icon.style.animation='spin 1s linear infinite';}
+  try {
+    const bio = await callAI(`Write a compelling 3-sentence professional bio for a portfolio website.
+Name: ${data.name||'a developer'}
+Role: ${data.title||'Software Developer'}
+Skills: ${data.skills.join(', ')||'programming'}
+Make it authentic, first-person, and engaging. Return only the bio text, nothing else.`);
+    data.about=bio;
+    const ta=document.getElementById('f-about');
+    if(ta) ta.value=bio;
+    save(); renderPreview(); calcProgress();
+    toast('Bio generated!','success');
+  } catch(e) { toast(e.message||'Generation failed.','error'); }
+  if(btn) btn.disabled=false;
+  if(icon){icon.textContent='✦';icon.style.animation='';}
+  isGenerating=false;
+}
+
+async function suggestSkills() {
+  if(isGenerating) return;
+  isGenerating=true;
+  const btn=document.getElementById('gen-skills-btn');
+  const icon=document.getElementById('gen-skills-icon');
+  if(btn) btn.disabled=true;
+  if(icon){icon.textContent='⟳';icon.style.animation='spin 1s linear infinite';}
+  try {
+    const res = await callAI(`List 10 relevant technical skills for a ${data.title||'frontend developer'} portfolio.
+Return ONLY a comma-separated list like: React, TypeScript, CSS, Node.js
+No explanations, numbers, or markdown. Just comma-separated skill names.`);
+    const newSkills=res.split(',').map(s=>s.trim()).filter(s=>s&&!data.skills.includes(s));
+    data.skills.push(...newSkills.slice(0,10));
+    save(); renderForm(); renderPreview(); calcProgress();
+    toast(`Added ${Math.min(newSkills.length,10)} skills!`,'success');
+  } catch(e) { toast(e.message||'Failed to suggest skills.','error'); }
+  if(btn) btn.disabled=false;
+  if(icon){icon.textContent='✦';icon.style.animation='';}
+  isGenerating=false;
+}
+
+async function improveDesc(id) {
+  if(isGenerating) return;
+  const p=data.projects.find(p=>p.id===id);
+  if(!p||!p.name){toast('Add a project name first.','info');return;}
+  isGenerating=true;
+  toast('Improving description...','info');
+  try {
+    const res = await callAI(`Write a compelling 2-sentence project description for a developer portfolio.
+Project name: ${p.name}
+Tech stack: ${p.tech||'various technologies'}
+Current description: ${p.desc||'(none provided)'}
+Make it punchy and results-focused. Return only the description, no quotes or preamble.`);
+    p.desc=res;
+    save(); renderForm(); renderPreview();
+    toast('Description improved!','success');
+  } catch(e) { toast(e.message||'Failed to improve description.','error'); }
+  isGenerating=false;
+}
+
+// ===== Preview =====
+function renderPreview() {
+  const el=document.getElementById('portfolio-preview');
+  const initials=data.name?data.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase():'?';
+  const heroLinks=[
+    data.github&&`<a href="${esc(data.github)}" target="_blank">GitHub</a>`,
+    data.linkedin&&`<a href="${esc(data.linkedin)}" target="_blank">LinkedIn</a>`,
+    data.website&&`<a href="${esc(data.website)}" target="_blank">Website</a>`,
+    data.twitter&&`<a href="${esc(data.twitter)}" target="_blank">Twitter</a>`
+  ].filter(Boolean).join('');
+  const skillsHTML=data.skills.length
+    ?data.skills.map(s=>`<span class="skill-pill">${esc(s)}</span>`).join('')
+    :'<span style="color:var(--text3);font-size:13px;">Add skills in Step 3</span>';
+  const projectsHTML=data.projects.filter(p=>p.name).length
+    ?data.projects.filter(p=>p.name).map(p=>`
+      <div class="pf-project">
+        <h4>${esc(p.name)}</h4>
+        <p>${esc(p.desc)||'No description yet.'}</p>
+        <div class="pf-tech-tags">${(p.tech||'').split(',').filter(t=>t.trim()).map(t=>`<span class="pf-tech">${esc(t.trim())}</span>`).join('')}</div>
+        ${p.url?`<a href="${esc(p.url)}" target="_blank" style="font-size:12px;color:#22d3ee;text-decoration:none;display:inline-block;margin-top:8px;">↗ View Project</a>`:''}
+      </div>`).join('')
+    :'<div class="empty-state"><div class="big">📁</div>Add projects in Step 4</div>';
+  const experienceHTML=data.experience.filter(e=>e.role).length
+    ?data.experience.filter(e=>e.role).map(e=>`
+      <div class="exp-card">
+        <div class="exp-role">${esc(e.role)}</div>
+        <div class="exp-company">${esc(e.company)}</div>
+        <div class="exp-period">${esc(e.period)}</div>
+        ${e.desc?`<div class="exp-desc">${esc(e.desc)}</div>`:''}
+      </div>`).join('')
+    :'<div class="empty-state" style="padding:16px 0;"><span style="font-size:13px;color:var(--text3)">Add experience in Step 5</span></div>';
+  const contactItems=[
+    data.email&&`<div class="pf-contact-item"><div class="pf-contact-icon">✉</div>${esc(data.email)}</div>`,
+    data.phone&&`<div class="pf-contact-item"><div class="pf-contact-icon">☎</div>${esc(data.phone)}</div>`,
+    data.location&&`<div class="pf-contact-item"><div class="pf-contact-icon">⊙</div>${esc(data.location)}</div>`
+  ].filter(Boolean).join('');
+  el.innerHTML=`
+    <div class="pf-hero">
+      <div class="pf-avatar">${initials}</div>
+      <div class="pf-name">${data.name||'Your Name'}</div>
+      <div class="pf-title">${data.title||'Your Title'}</div>
+      <div class="pf-social">${heroLinks||'<a href="#">GitHub</a><a href="#">LinkedIn</a>'}</div>
+    </div>
+    <div class="pf-section">
+      <div class="pf-section-title">About</div>
+      <div class="pf-about">${data.about||'<span style="color:var(--text3)">Write your bio in Step 2, or use AI to generate it.</span>'}</div>
+    </div>
+    <div class="pf-section">
+      <div class="pf-section-title">Skills</div>
+      <div class="skills-grid">${skillsHTML}</div>
+    </div>
+    <div class="pf-section">
+      <div class="pf-section-title">Projects</div>
+      <div class="projects-grid">${projectsHTML}</div>
+    </div>
+    <div class="pf-section">
+      <div class="pf-section-title">Experience</div>
+      ${experienceHTML}
+    </div>
+    <div class="pf-section">
+      <div class="pf-section-title">Contact</div>
+      <div class="pf-contact">${contactItems||'<span style="color:var(--text3);font-size:13px;">Add contact info in Step 1</span>'}</div>
+    </div>`;
+}
+
+goStep(0);
+renderPreview();
+calcProgress();
+</script>
+</body>
+</html>
